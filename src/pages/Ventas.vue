@@ -188,10 +188,21 @@ const cerrarModalNuevaVenta = () => {
 }
 
 const agregarProducto = () => {
-  if (!productoSeleccionado.value || cantidadProducto.value <= 0) return
+  console.log('productoSeleccionado:', productoSeleccionado.value)
+  console.log('cantidadProducto:', cantidadProducto.value)
+
+  if (!productoSeleccionado.value || cantidadProducto.value <= 0) {
+    console.log('Validación inicial fallida')
+    return
+  }
 
   const producto = productos.value.find(p => p.idProducto === productoSeleccionado.value)
-  if (!producto) return
+  console.log('Producto encontrado:', producto)
+
+  if (!producto) {
+    console.log('Producto no encontrado')
+    return
+  }
 
   if (cantidadProducto.value > producto.stockActual) {
     alert('Stock insuficiente')
