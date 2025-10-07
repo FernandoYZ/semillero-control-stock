@@ -50,7 +50,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">Agregar Producto</label>
           <div class="flex flex-col sm:flex-row gap-2">
             <select v-model="productoSeleccionado" class="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option value="" disabled>Seleccionar producto</option>
+              <option :value="null" disabled>Seleccionar producto</option>
               <option v-for="producto in productos" :key="producto.idProducto" :value="producto.idProducto">
                 {{ producto.nombre }} (Stock: {{ producto.stockActual }})
               </option>
@@ -149,7 +149,7 @@ const modalNuevaVenta = ref(false)
 const modalDetalle = ref(false)
 const ventaSeleccionada = ref(null)
 const detallesVenta = ref([])
-const productoSeleccionado = ref('')
+const productoSeleccionado = ref(null)
 const cantidadProducto = ref(1)
 
 const nuevaVenta = reactive({
@@ -178,7 +178,7 @@ const obtenerNombreProducto = (idProducto) => {
 const abrirModalNuevaVenta = () => {
   nuevaVenta.idCliente = ''
   nuevaVenta.detalles = []
-  productoSeleccionado.value = ''
+  productoSeleccionado.value = null
   cantidadProducto.value = 1
   modalNuevaVenta.value = true
 }
@@ -204,7 +204,7 @@ const agregarProducto = () => {
     precioUnitario: producto.precioVenta
   })
 
-  productoSeleccionado.value = ''
+  productoSeleccionado.value = null
   cantidadProducto.value = 1
 }
 
