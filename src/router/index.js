@@ -47,6 +47,11 @@ const routes = [
         name: "Inventario",
         component: () => import("@/pages/Inventario.vue"),
       },
+      {
+        path: "configuracion",
+        name: "configuracion",
+        component: () => import("@/pages/Configuracion.vue"),
+      },
     ],
   },
 ];

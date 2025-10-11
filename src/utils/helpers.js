@@ -29,10 +29,11 @@ export const formatearFechaHora = (timestamp) => {
 
 // Formatear moneda
 export const formatearMoneda = (valor) => {
-  if (valor === null || valor === undefined) return '$0.00'
+  if (valor === null || valor === undefined) return '0.00'
   return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'USD'
+    style: 'decimal',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(valor)
 }
 

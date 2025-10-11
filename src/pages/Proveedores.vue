@@ -1,146 +1,107 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex justify-between items-center">
-      <h2 class="text-xl font-bold">Proveedores</h2>
-      <button @click="abrirModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-        + Nuevo
-      </button>
-    </div>
-
-    <!-- Búsqueda -->
-    <input v-model="busqueda" type="text" placeholder="Buscar proveedores..."
-      class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-
-    <!-- Lista de proveedores -->
-    <div v-if="proveedoresFiltrados.length === 0" class="bg-white p-8 rounded-lg shadow text-center text-gray-500">
-      No hay proveedores registrados
-    </div>
-
-    <div v-else class="space-y-2">
-      <div v-for="proveedor in proveedoresFiltrados" :key="proveedor.idProveedor"
-        class="bg-white p-4 rounded-lg shadow">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-800">{{ proveedor.nombre }}</h3>
-            <p class="text-sm text-gray-600">👤 {{ proveedor.contacto }}</p>
-            <p class="text-sm text-gray-600">📧 {{ proveedor.email }}</p>
-            <p class="text-sm text-gray-600">📞 {{ proveedor.telefono }}</p>
-            <p class="text-sm text-gray-600">📍 {{ proveedor.direccion }}</p>
+  <div class="space-y-6">
+    
+    <!-- Header -->
+    <header class="space-y-6">
+      <!-- Desktop Title -->
+      <div class="hidden md:block">
+        <h1 class="text-4xl font-bold text-white">Proveedores</h1>
+      </div>
+      <!-- Action Bar -->
+      <div class="flex items-center gap-4 w-full">
+        <div class="relative flex-grow">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <BuscarIcono class="w-5 h-5 text-oscuro-400" />
           </div>
-          <div class="flex gap-2">
-            <button @click="abrirModal(proveedor)" class="text-blue-600 text-sm">Editar</button>
-            <button @click="eliminar(proveedor.idProveedor)" class="text-red-600 text-sm">Eliminar</button>
-          </div>
+          <input v-model="busqueda" type="text" placeholder="Buscar proveedor..."
+            class="w-full pl-10 pr-4 md:py-2 py-4 bg-oscuro-700/70 md:border md:border-oscuro-700 rounded-full md:rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none">
         </div>
+        <button @click="abrirModal()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-4 md:py-2 rounded-2xl md:rounded-lg text-sm font-medium transition-colors flex-shrink-0 flex items-center gap-2">
+          <PlusIcono class="w-5 h-5" />
+          <span class="hidden sm:inline">Nuevo</span>
+        </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Modal -->
-    <div v-if="modalAbierto" @click="cerrarModal" class="fixed inset-0 bg-black/40 bg-opacity-50 flex items-end md:items-center justify-center z-50">
-      <div @click.stop class="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-lg p-6 max-h-[80vh] overflow-y-auto">
-        <h3 class="text-lg font-bold mb-4">{{ proveedorActual ? 'Editar' : 'Nuevo' }} Proveedor</h3>
-        <form @submit.prevent="guardar" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-            <input v-model="form.nombre" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Contacto</label>
-            <input v-model="form.contacto" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input v-model="form.email" type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-            <input v-model="form.telefono" type="tel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-            <textarea v-model="form.direccion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-          </div>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="cerrarModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
-              Cancelar
-            </button>
-            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">
-              Guardar
-            </button>
-          </div>
-        </form>
+    <!-- Main Content Area -->
+    <main class="md:bg-oscuro-900/50 md:rounded-2xl md:p-6">
+      <!-- "No Proveedores" State -->
+      <div v-if="proveedoresFiltrados.length === 0" class="text-center py-16 sm:py-24">
+        <div class="inline-block bg-oscuro-800 p-5 sm:p-6 rounded-full shadow-lg">
+          <BotonProveedores class="w-14 h-14 sm:w-16 sm:h-16 text-oscuro-500" />
+        </div>
+        <h3 class="text-2xl font-bold tracking-tight mt-6">Sin proveedores</h3>
+        <p class="text-sm sm:text-base text-oscuro-400 mt-2 max-w-md mx-auto">
+          Comienza agregando tu primer proveedor para gestionar tus pedidos.
+        </p>
       </div>
-    </div>
+
+      <!-- Proveedores Grid -->
+      <div v-else class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <CardProveedores
+          v-for="proveedor in proveedoresFiltrados"
+          :key="proveedor.idProveedor"
+          :proveedor="proveedor"
+          @editar="abrirModal"
+          @eliminar="eliminar"
+        />
+      </div>
+    </main>
+
+    <ModalProveedores 
+      v-model="modalAbierto"
+      :proveedor="proveedorActual"
+      @proveedorGuardado="onProveedorGuardado"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useProveedoresStore } from '@/stores/proveedores'
+import { ref, computed, onMounted } from 'vue';
+import { useProveedoresStore } from '@/stores/proveedores';
+import ModalProveedores from '@/components/Proveedores/ModalProveedores.vue';
+import CardProveedores from '@/components/Proveedores/CardProveedores.vue';
+import BuscarIcono from '@/components/icons/BuscarIcono.vue';
+import PlusIcono from '@/components/icons/PlusIcono.vue';
+import BotonProveedores from '@/components/partials/BotonProveedores.vue';
 
-const store = useProveedoresStore()
-const modalAbierto = ref(false)
-const proveedorActual = ref(null)
-const busqueda = ref('')
+const store = useProveedoresStore();
+const modalAbierto = ref(false);
+const proveedorActual = ref(null);
+const busqueda = ref('');
 
-const form = reactive({
-  nombre: '',
-  contacto: '',
-  email: '',
-  telefono: '',
-  direccion: ''
-})
-
-const proveedores = computed(() => store.proveedores)
+const proveedores = computed(() => store.proveedores);
 
 const proveedoresFiltrados = computed(() => {
-  if (!busqueda.value) return proveedores.value
-  const term = busqueda.value.toLowerCase()
+  if (!busqueda.value) return proveedores.value;
+  const term = busqueda.value.toLowerCase();
   return proveedores.value.filter(p =>
     p.nombre.toLowerCase().includes(term) ||
-    p.email.toLowerCase().includes(term)
-  )
-})
+    (p.contacto && p.contacto.toLowerCase().includes(term)) ||
+    (p.email && p.email.toLowerCase().includes(term))
+  );
+});
 
 const abrirModal = (proveedor = null) => {
-  proveedorActual.value = proveedor
-  if (proveedor) {
-    Object.assign(form, proveedor)
-  } else {
-    Object.keys(form).forEach(key => form[key] = '')
-  }
-  modalAbierto.value = true
-}
+  proveedorActual.value = proveedor;
+  modalAbierto.value = true;
+};
 
-const cerrarModal = () => {
-  modalAbierto.value = false
-  proveedorActual.value = null
-}
-
-const guardar = async () => {
-  try {
-    if (proveedorActual.value) {
-      await store.actualizarProveedor(proveedorActual.value.idProveedor, { ...form })
-    } else {
-      await store.agregarProveedor({ ...form })
-    }
-    cerrarModal()
-  } catch (error) {
-    alert('Error al guardar: ' + error.message)
-  }
-}
+const onProveedorGuardado = () => {
+  store.cargarProveedores();
+};
 
 const eliminar = async (id) => {
   if (confirm('¿Estás seguro de eliminar este proveedor?')) {
     try {
-      await store.eliminarProveedor(id)
+      await store.eliminarProveedor(id);
     } catch (error) {
-      alert('Error al eliminar: ' + error.message)
+      alert('Error al eliminar: ' + error.message);
     }
   }
-}
+};
 
 onMounted(() => {
-  store.cargarProveedores()
-})
+  store.cargarProveedores();
+});
 </script>

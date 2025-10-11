@@ -1,140 +1,106 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex justify-between items-center">
-      <h2 class="text-xl font-bold">Clientes</h2>
-      <button @click="abrirModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-        + Nuevo
-      </button>
-    </div>
-
-    <!-- Búsqueda -->
-    <input v-model="busqueda" type="text" placeholder="Buscar clientes..."
-      class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-
-    <!-- Lista de clientes -->
-    <div v-if="clientesFiltrados.length === 0" class="bg-white p-8 rounded-lg shadow text-center text-gray-500">
-      No hay clientes registrados
-    </div>
-
-    <div v-else class="space-y-2">
-      <div v-for="cliente in clientesFiltrados" :key="cliente.idCliente"
-        class="bg-white p-4 rounded-lg shadow">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-800">{{ cliente.nombre }}</h3>
-            <p class="text-sm text-gray-600">📧 {{ cliente.email }}</p>
-            <p class="text-sm text-gray-600">📞 {{ cliente.telefono }}</p>
-            <p class="text-sm text-gray-600">📍 {{ cliente.direccion }}</p>
+  <div class="space-y-6">
+    
+    <!-- Header -->
+    <header class="space-y-6">
+      <!-- Desktop Title -->
+      <div class="hidden md:block">
+        <h1 class="text-4xl font-bold text-white">Clientes</h1>
+      </div>
+      <!-- Action Bar -->
+      <div class="flex items-center gap-4 w-full">
+        <div class="relative flex-grow">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <BuscarIcono class="w-5 h-5 text-oscuro-400" />
           </div>
-          <div class="flex gap-2">
-            <button @click="abrirModal(cliente)" class="text-blue-600 text-sm">Editar</button>
-            <button @click="eliminar(cliente.idCliente)" class="text-red-600 text-sm">Eliminar</button>
-          </div>
+          <input v-model="busqueda" type="text" placeholder="Buscar cliente..."
+            class="w-full pl-10 pr-4 md:py-2 py-4 bg-oscuro-700/70 md:border md:border-oscuro-700 rounded-full md:rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none">
         </div>
+        <button @click="abrirModal()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-4 md:py-2 rounded-2xl md:rounded-lg text-sm font-medium transition-colors flex-shrink-0 flex items-center gap-2">
+          <PlusIcono class="w-5 h-5" />
+          <span class="hidden sm:inline">Nuevo</span>
+        </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Modal -->
-    <div v-if="modalAbierto" @click="cerrarModal" class="fixed inset-0 bg-black/40 bg-opacity-50 flex items-end md:items-center justify-center z-50">
-      <div @click.stop class="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-lg p-6 max-h-[80vh] overflow-y-auto">
-        <h3 class="text-lg font-bold mb-4">{{ clienteActual ? 'Editar' : 'Nuevo' }} Cliente</h3>
-        <form @submit.prevent="guardar" class="space-y-3">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-            <input v-model="form.nombre" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input v-model="form.email" type="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-            <input v-model="form.telefono" type="tel" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-            <textarea v-model="form.direccion" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg"></textarea>
-          </div>
-          <div class="flex gap-3 pt-2">
-            <button type="button" @click="cerrarModal" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg">
-              Cancelar
-            </button>
-            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">
-              Guardar
-            </button>
-          </div>
-        </form>
+    <!-- Main Content Area -->
+    <main class="md:bg-oscuro-900/50 md:rounded-2xl md:p-6">
+      <!-- "No Clients" State -->
+      <div v-if="clientesFiltrados.length === 0" class="text-center py-16 sm:py-24">
+        <div class="inline-block bg-oscuro-800 p-5 sm:p-6 rounded-full shadow-lg">
+          <BotonClientes class="w-14 h-14 sm:w-16 sm:h-16 text-oscuro-500" />
+        </div>
+        <h3 class="text-2xl font-bold tracking-tight mt-6">Sin clientes</h3>
+        <p class="text-sm sm:text-base text-oscuro-400 mt-2 max-w-md mx-auto">
+          Comienza agregando tu primer cliente para gestionar tus ventas.
+        </p>
       </div>
-    </div>
+
+      <!-- Clients List -->
+      <div v-else class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+        <CardCliente
+          v-for="cliente in clientesFiltrados"
+          :key="cliente.idCliente"
+          :cliente="cliente"
+          @editar="abrirModal"
+          @eliminar="eliminar"
+        />
+      </div>
+    </main>
+
+    <ModalClientes 
+      v-model="modalAbierto"
+      :cliente="clienteActual"
+      @clienteGuardado="onClienteGuardado"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useClientesStore } from '@/stores/clientes'
+import { ref, computed, onMounted } from 'vue';
+import { useClientesStore } from '@/stores/clientes';
+import ModalClientes from '@/components/Clientes/ModalClientes.vue';
+import CardCliente from '@/components/Clientes/CardCliente.vue';
+import BuscarIcono from '@/components/icons/BuscarIcono.vue';
+import PlusIcono from '@/components/icons/PlusIcono.vue';
+import BotonClientes from '@/components/partials/BotonClientes.vue';
 
-const store = useClientesStore()
-const modalAbierto = ref(false)
-const clienteActual = ref(null)
-const busqueda = ref('')
+const store = useClientesStore();
+const modalAbierto = ref(false);
+const clienteActual = ref(null);
+const busqueda = ref('');
 
-const form = reactive({
-  nombre: '',
-  email: '',
-  telefono: '',
-  direccion: ''
-})
-
-const clientes = computed(() => store.clientes)
+const clientes = computed(() => store.clientes);
 
 const clientesFiltrados = computed(() => {
-  if (!busqueda.value) return clientes.value
-  const term = busqueda.value.toLowerCase()
+  if (!busqueda.value) return clientes.value;
+  const term = busqueda.value.toLowerCase();
   return clientes.value.filter(c =>
     c.nombre.toLowerCase().includes(term) ||
-    c.email.toLowerCase().includes(term)
-  )
-})
+    (c.email && c.email.toLowerCase().includes(term))
+  );
+});
 
 const abrirModal = (cliente = null) => {
-  clienteActual.value = cliente
-  if (cliente) {
-    Object.assign(form, cliente)
-  } else {
-    Object.keys(form).forEach(key => form[key] = '')
-  }
-  modalAbierto.value = true
-}
+  clienteActual.value = cliente;
+  modalAbierto.value = true;
+};
 
-const cerrarModal = () => {
-  modalAbierto.value = false
-  clienteActual.value = null
-}
-
-const guardar = async () => {
-  try {
-    if (clienteActual.value) {
-      await store.actualizarCliente(clienteActual.value.idCliente, { ...form })
-    } else {
-      await store.agregarCliente({ ...form })
-    }
-    cerrarModal()
-  } catch (error) {
-    alert('Error al guardar: ' + error.message)
-  }
-}
+const onClienteGuardado = () => {
+  store.cargarClientes();
+};
 
 const eliminar = async (id) => {
   if (confirm('¿Estás seguro de eliminar este cliente?')) {
     try {
-      await store.eliminarCliente(id)
+      await store.eliminarCliente(id);
     } catch (error) {
-      alert('Error al eliminar: ' + error.message)
+      alert('Error al eliminar: ' + error.message);
     }
   }
-}
+};
 
 onMounted(() => {
-  store.cargarClientes()
-})
+  store.cargarClientes();
+});
 </script>

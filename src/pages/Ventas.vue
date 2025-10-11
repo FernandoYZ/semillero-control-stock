@@ -1,256 +1,243 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex justify-between items-center">
-      <h2 class="text-xl font-bold">Ventas</h2>
-      <button @click="abrirModalNuevaVenta()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-        + Nueva Venta
-      </button>
-    </div>
-
-    <!-- Lista de ventas -->
-    <div v-if="ventas.length === 0" class="bg-white p-8 rounded-lg shadow text-center text-gray-500">
-      No hay ventas registradas
-    </div>
-
-    <div v-else class="space-y-2">
-      <div v-for="venta in ventas" :key="venta.idVenta"
-        class="bg-white p-4 rounded-lg shadow cursor-pointer"
-        @click="verDetalle(venta)">
-        <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-800">Venta #{{ venta.idVenta.slice(0, 8) }}</h3>
-            <p class="text-sm text-gray-600">{{ formatearFechaHora(venta.fecha) }}</p>
-            <p class="text-sm text-gray-600">Cliente: {{ obtenerNombreCliente(venta.idCliente) }}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-lg font-bold text-green-600">{{ formatearMoneda(venta.total) }}</p>
-          </div>
-        </div>
+  <div class="space-y-6">
+    
+    <!-- Header -->
+    <header class="space-y-6">
+      <!-- Desktop Title -->
+      <div class="hidden md:block">
+        <h1 class="text-4xl font-bold text-white">Ventas</h1>
       </div>
-    </div>
-
-    <!-- Modal Nueva Venta -->
-    <div v-if="modalNuevaVenta" @click="cerrarModalNuevaVenta" class="fixed inset-0 bg-black/40 bg-opacity-50 flex items-end md:items-center justify-center z-50">
-      <div @click.stop class="bg-white w-full md:max-w-2xl rounded-t-2xl md:rounded-lg p-4 md:p-6 max-h-[90vh] overflow-y-auto">
-        <h3 class="text-lg font-bold mb-4">Nueva Venta</h3>
-
-        <!-- Seleccionar cliente -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
-          <select v-model="nuevaVenta.idCliente" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="" disabled>Seleccionar cliente</option>
-            <option v-for="cliente in clientes" :key="cliente.idCliente" :value="cliente.idCliente">
-              {{ cliente.nombre }}
-            </option>
-          </select>
+      <!-- Action Bar -->
+      <div class="flex items-center gap-4 w-full">
+        <div class="relative flex-grow">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <BuscarIcono class="w-5 h-5 text-oscuro-400" />
+          </div>
+          <input v-model="busqueda" type="text" placeholder="Buscar por cliente o ID..."
+            class="w-full pl-10 pr-4 md:py-2 py-4 bg-oscuro-700/70 md:border md:border-oscuro-700 rounded-full md:rounded-lg focus:ring-1 focus:ring-green-500 focus:border-green-500 outline-none">
         </div>
-
-        <!-- Agregar productos -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Agregar Producto</label>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <select v-model="productoSeleccionado" class="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option :value="null" disabled>Seleccionar producto</option>
-              <option v-for="producto in productos" :key="producto.idProducto" :value="producto.idProducto">
-                {{ producto.nombre }} (Stock: {{ producto.stockActual }})
-              </option>
-            </select>
-            <div class="flex gap-2">
-              <input v-model.number="cantidadProducto" type="number" min="1" placeholder="Cantidad"
-                class="flex-1 sm:w-24 px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <button @click="agregarProducto" type="button" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                Agregar
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lista de productos -->
-        <div v-if="nuevaVenta.detalles.length > 0" class="mb-4 border rounded-lg p-3 bg-gray-50">
-          <h4 class="font-semibold mb-3 text-sm">Productos Agregados</h4>
-          <div v-for="(detalle, index) in nuevaVenta.detalles" :key="index" class="flex justify-between items-start py-2.5 border-b last:border-0 bg-white px-3 mb-2 rounded">
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{{ obtenerNombreProducto(detalle.idProducto) }}</p>
-              <p class="text-xs text-gray-600 mt-0.5">{{ detalle.cantidad }} x {{ formatearMoneda(detalle.precioUnitario) }}</p>
-            </div>
-            <div class="flex items-center gap-2 ml-2">
-              <span class="font-semibold text-sm whitespace-nowrap">{{ formatearMoneda(detalle.cantidad * detalle.precioUnitario) }}</span>
-              <button @click="eliminarProducto(index)" class="text-red-600 hover:bg-red-50 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">✕</button>
-            </div>
-          </div>
-          <div class="mt-3 pt-3 border-t flex justify-between font-bold text-base">
-            <span>Total:</span>
-            <span class="text-green-600">{{ formatearMoneda(totalVenta) }}</span>
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row gap-3 sticky bottom-0 bg-white pt-4 -mx-4 md:-mx-6 px-4 md:px-6 pb-2">
-          <button type="button" @click="cerrarModalNuevaVenta" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">
-            Cancelar
-          </button>
-          <button @click="guardarVenta" :disabled="nuevaVenta.detalles.length === 0 || !nuevaVenta.idCliente"
-            class="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg disabled:bg-gray-300 hover:bg-green-700 disabled:hover:bg-gray-300 font-medium">
-            Guardar Venta
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Detalle -->
-    <div v-if="modalDetalle" @click="cerrarModalDetalle" class="fixed inset-0 bg-black/40 bg-opacity-50 flex items-end md:items-center justify-center z-50">
-      <div @click.stop class="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-lg p-4 md:p-6 max-h-[85vh] overflow-y-auto">
-        <h3 class="text-lg font-bold mb-4">Detalle de Venta</h3>
-        <div v-if="ventaSeleccionada" class="space-y-3">
-          <div>
-            <p class="text-sm text-gray-600">Fecha</p>
-            <p class="font-medium">{{ formatearFechaHora(ventaSeleccionada.fecha) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-600">Cliente</p>
-            <p class="font-medium">{{ obtenerNombreCliente(ventaSeleccionada.idCliente) }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-600 mb-2">Productos</p>
-            <div v-for="detalle in detallesVenta" :key="detalle.idDetalleVenta" class="bg-gray-50 p-3 rounded mb-2">
-              <div class="flex justify-between items-start">
-                <div class="flex-1 min-w-0">
-                  <p class="font-medium text-sm truncate">{{ obtenerNombreProducto(detalle.idProducto) }}</p>
-                  <p class="text-xs text-gray-600 mt-1">{{ detalle.cantidad }} x {{ formatearMoneda(detalle.precioUnitario) }}</p>
-                </div>
-                <p class="font-semibold text-sm ml-2 whitespace-nowrap">{{ formatearMoneda(detalle.cantidad * detalle.precioUnitario) }}</p>
-              </div>
-            </div>
-          </div>
-          <div class="pt-3 border-t">
-            <p class="text-sm text-gray-600">Total</p>
-            <p class="text-2xl font-bold text-green-600">{{ formatearMoneda(ventaSeleccionada.total) }}</p>
-          </div>
-        </div>
-        <button @click="cerrarModalDetalle" class="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-          Cerrar
+        <button @click="modalNuevaVenta = true" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-4 md:py-2 rounded-2xl md:rounded-lg text-sm font-medium transition-colors flex-shrink-0 flex items-center gap-2">
+          <PlusIcono class="w-5 h-5" />
+          <span class="hidden sm:inline">Nueva Venta</span>
         </button>
       </div>
-    </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="md:bg-oscuro-900/50 md:rounded-2xl md:p-6">
+      <!-- "No Ventas" State -->
+      <div v-if="!ventasFiltradas || ventasFiltradas.length === 0" class="text-center py-16 sm:py-24">
+        <div class="inline-block bg-oscuro-800 p-5 sm:p-6 rounded-full shadow-lg">
+          <BotonVentas class="w-14 h-14 sm:w-16 sm:h-16 text-oscuro-500" />
+        </div>
+        <h3 class="text-2xl font-bold tracking-tight mt-6">Sin ventas</h3>
+        <p class="text-sm sm:text-base text-oscuro-400 mt-2 max-w-md mx-auto">
+          Aún no se han registrado ventas. Comienza creando una nueva.
+        </p>
+      </div>
+
+      <!-- Content -->
+      <div v-else>
+        <!-- Card View (Mobile) -->
+        <div class="md:hidden space-y-3">
+          <CardVentas
+            v-for="venta in ventasFiltradas"
+            :key="venta.idVenta"
+            :venta="venta"
+            :obtenerNombreCliente="obtenerNombreCliente"
+            @verDetalle="verDetalle"
+          />
+        </div>
+
+        <!-- Grid View (Desktop) -->
+        <div class="hidden md:grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <CardEscritorio
+            v-for="venta in ventasFiltrados"
+            :key="venta.idVenta"
+            :venta="venta"
+            :obtenerNombreCliente="obtenerNombreCliente"
+            @verDetalle="verDetalle"
+          />
+        </div>
+      </div>
+    </main>
+
+    <ModalVentas 
+      v-model="modalNuevaVenta"
+      :clientes="clientes"
+      :productos="productos"
+      @ventaGuardada="onVentaGuardada"
+    />
+
+    <!-- Modal Detalle Venta -->
+    <Transition name="modal">
+      <div v-if="modalDetalle" @click="cerrarModalDetalle" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end md:items-center justify-center z-50">
+        <div @click.stop class="modal-container bg-gradient-to-br from-oscuro-800/95 to-oscuro-900/95 backdrop-blur-lg w-full md:max-w-md rounded-t-3xl md:rounded-lg flex flex-col max-h-[90vh]">
+          <div class="p-4 md:border-b md:border-oscuro-700">
+            <div class="w-12 h-1.5 mx-auto rounded-full bg-oscuro-600 mb-4 md:hidden"></div>
+            <h3 class="text-lg text-center font-bold md:text-left">Detalle de Venta</h3>
+          </div>
+          <div v-if="ventaSeleccionada" class="p-4 space-y-4 overflow-y-auto flex-1">
+            <div class="bg-oscuro-900/50 rounded-xl p-4 space-y-3">
+              <div>
+                <p class="text-sm text-oscuro-400">Cliente</p>
+                <p class="font-semibold text-white">{{ obtenerNombreCliente(ventaSeleccionada.idCliente) }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-oscuro-400">Fecha</p>
+                <p class="font-semibold text-white">{{ formatearFechaHora(ventaSeleccionada.fecha) }}</p>
+              </div>
+            </div>
+            <div class="bg-oscuro-900/50 rounded-xl p-4">
+              <p class="text-sm font-medium text-oscuro-300 mb-2">Productos</p>
+              <div class="space-y-2">
+                <div v-for="detalle in detallesVenta" :key="detalle.idDetalleVenta" class="flex justify-between items-center">
+                  <div>
+                    <p class="font-medium text-sm text-white">{{ obtenerNombreProducto(detalle.idProducto) }}</p>
+                    <p class="text-xs text-oscuro-400">{{ detalle.cantidad }} x {{ formatearMoneda(detalle.precioUnitario) }}</p>
+                  </div>
+                  <p class="font-semibold text-white">S/.{{ formatearMoneda(detalle.cantidad * detalle.precioUnitario) }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-oscuro-900/50 rounded-xl p-4 flex justify-between items-center">
+              <p class="text-sm font-medium text-oscuro-300">Total</p>
+              <p class="text-2xl font-bold text-green-400">S/.{{ formatearMoneda(ventaSeleccionada.total) }}</p>
+            </div>
+          </div>
+          <div class="p-4 mt-auto md:border-t md:border-oscuro-700">
+            <button @click="cerrarModalDetalle" class="w-full px-4 py-2 bg-oscuro-700 text-white rounded-lg hover:bg-oscuro-600 transition-colors">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useVentasStore } from '@/stores/ventas'
-import { useClientesStore } from '@/stores/clientes'
-import { useProductosStore } from '@/stores/productos'
-import { formatearMoneda, formatearFechaHora } from '@/utils/helpers'
+import { ref, computed, onMounted, watch } from 'vue';
+import { useVentasStore } from '@/stores/ventas';
+import { useClientesStore } from '@/stores/clientes';
+import { useProductosStore } from '@/stores/productos';
+import { formatearMoneda, formatearFechaHora } from '@/utils/helpers';
+import ModalVentas from '@/components/Ventas/ModalVentas.vue';
+import CardVentas from '@/components/Ventas/CardVentas.vue';
+import CardEscritorio from '@/components/Ventas/CardEscritorio.vue';
+import BuscarIcono from '@/components/icons/BuscarIcono.vue';
+import PlusIcono from '@/components/icons/PlusIcono.vue';
+import BotonVentas from '@/components/partials/BotonVentas.vue';
 
-const ventasStore = useVentasStore()
-const clientesStore = useClientesStore()
-const productosStore = useProductosStore()
+const ventasStore = useVentasStore();
+const clientesStore = useClientesStore();
+const productosStore = useProductosStore();
 
-const modalNuevaVenta = ref(false)
-const modalDetalle = ref(false)
-const ventaSeleccionada = ref(null)
-const detallesVenta = ref([])
-const productoSeleccionado = ref(null)
-const cantidadProducto = ref(1)
+const modalNuevaVenta = ref(false);
+const modalDetalle = ref(false);
+const ventaSeleccionada = ref(null);
+const detallesVenta = ref([]);
+const busqueda = ref('');
 
-const nuevaVenta = reactive({
-  idCliente: '',
-  detalles: []
-})
+const ventas = computed(() => ventasStore.ventas);
+const clientes = computed(() => clientesStore.clientes);
+const productos = computed(() => productosStore.productos);
 
-const ventas = computed(() => ventasStore.ventas)
-const clientes = computed(() => clientesStore.clientes)
-const productos = computed(() => productosStore.productos)
+// --- INICIO DE LA CORRECCIÓN ---
 
-const totalVenta = computed(() => {
-  return nuevaVenta.detalles.reduce((sum, d) => sum + (d.cantidad * d.precioUnitario), 0)
-})
+// 1. Se reemplaza la propiedad computada por una referencia simple.
+const ventasFiltradas = ref([]);
 
 const obtenerNombreCliente = (idCliente) => {
-  const cliente = clientes.value.find(c => c.idCliente === idCliente)
-  return cliente ? cliente.nombre : 'N/A'
-}
+  if (!clientes.value) return 'N/A';
+  const cliente = clientes.value.find(c => c.idCliente === idCliente);
+  return cliente ? cliente.nombre : 'N/A';
+};
+
+// 2. Se crea un "observador" que actualiza manualmente la lista filtrada.
+watch([ventas, busqueda], ([nuevasVentas, nuevaBusqueda]) => {
+  if (!Array.isArray(nuevasVentas)) {
+    ventasFiltradas.value = [];
+    return;
+  }
+
+  if (!nuevaBusqueda) {
+    ventasFiltradas.value = nuevasVentas;
+    return;
+  }
+
+  const term = nuevaBusqueda.toLowerCase();
+  ventasFiltradas.value = nuevasVentas.filter(venta => {
+    if (!venta) return false;
+    const nombreCliente = obtenerNombreCliente(venta.idCliente) || '';
+    const idVenta = venta.idVenta || '';
+    return (
+      nombreCliente.toLowerCase().includes(term) ||
+      idVenta.toLowerCase().includes(term)
+    );
+  });
+}, { immediate: true }); // immediate: true asegura que se ejecute al inicio
+
+// --- FIN DE LA CORRECCIÓN ---
 
 const obtenerNombreProducto = (idProducto) => {
-  const producto = productos.value.find(p => p.idProducto === idProducto)
-  return producto ? producto.nombre : 'N/A'
-}
+  const producto = productos.value.find(p => p.idProducto === idProducto);
+  return producto ? producto.nombre : 'N/A';
+};
+
+const onVentaGuardada = () => {
+  ventasStore.cargarVentas();
+  productosStore.cargarProductos();
+};
 
 const abrirModalNuevaVenta = () => {
-  nuevaVenta.idCliente = ''
-  nuevaVenta.detalles = []
-  productoSeleccionado.value = null
-  cantidadProducto.value = 1
-  modalNuevaVenta.value = true
-}
-
-const cerrarModalNuevaVenta = () => {
-  modalNuevaVenta.value = false
-}
-
-const agregarProducto = () => {
-  console.log('productoSeleccionado:', productoSeleccionado.value)
-  console.log('cantidadProducto:', cantidadProducto.value)
-
-  if (!productoSeleccionado.value || cantidadProducto.value <= 0) {
-    console.log('Validación inicial fallida')
-    return
-  }
-
-  const producto = productos.value.find(p => p.idProducto === productoSeleccionado.value)
-  console.log('Producto encontrado:', producto)
-
-  if (!producto) {
-    console.log('Producto no encontrado')
-    return
-  }
-
-  if (cantidadProducto.value > producto.stockActual) {
-    alert('Stock insuficiente')
-    return
-  }
-
-  nuevaVenta.detalles.push({
-    idProducto: producto.idProducto,
-    cantidad: cantidadProducto.value,
-    precioUnitario: producto.precioVenta
-  })
-
-  productoSeleccionado.value = null
-  cantidadProducto.value = 1
-}
-
-const eliminarProducto = (index) => {
-  nuevaVenta.detalles.splice(index, 1)
-}
-
-const guardarVenta = async () => {
-  try {
-    await ventasStore.crearVenta(
-      { idCliente: nuevaVenta.idCliente },
-      nuevaVenta.detalles
-    )
-    cerrarModalNuevaVenta()
-    alert('Venta registrada exitosamente')
-  } catch (error) {
-    alert('Error al guardar venta: ' + error.message)
-  }
-}
+  modalNuevaVenta.value = true;
+};
 
 const verDetalle = async (venta) => {
-  ventaSeleccionada.value = venta
-  detallesVenta.value = await ventasStore.obtenerDetallesVenta(venta.idVenta)
-  modalDetalle.value = true
-}
+  ventaSeleccionada.value = venta;
+  detallesVenta.value = await ventasStore.obtenerDetallesVenta(venta.idVenta);
+  modalDetalle.value = true;
+};
 
 const cerrarModalDetalle = () => {
-  modalDetalle.value = false
-  ventaSeleccionada.value = null
-  detallesVenta.value = []
-}
+  modalDetalle.value = false;
+  ventaSeleccionada.value = null;
+  detallesVenta.value = [];
+};
 
 onMounted(async () => {
-  await ventasStore.cargarVentas()
-  await clientesStore.cargarClientes()
-  await productosStore.cargarProductos()
-})
+  await ventasStore.cargarVentas();
+  await clientesStore.cargarClientes();
+  await productosStore.cargarProductos();
+});
 </script>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active .modal-container {
+  transition: all 0.3s ease-out;
+}
+.modal-leave-active .modal-container {
+  transition: all 0.3s ease-in;
+}
+
+.modal-enter-from .modal-container,
+.modal-leave-to .modal-container {
+  opacity: 0;
+  transform: translateY(100%) scale(1);
+}
+
+@media (min-width: 768px) {
+  .modal-enter-from .modal-container,
+  .modal-leave-to .modal-container {
+    transform: translateY(0) scale(0.95);
+  }
+}
+</style>

@@ -1,8 +1,10 @@
-import Dexie from 'dexie'
+import { Dexie } from 'dexie';
 
-export const db = new Dexie('SistemaLogistico')
+export const db = new Dexie('SistemaLogistico');
 
-// Definir esquema de la base de datos
+// Historial de Versiones. Dexie requiere que se mantengan las definiciones anteriores.
+
+// Versión 1 - Esquema inicial
 db.version(1).stores({
   categorias: 'idCategoria, nombre',
   productos: 'idProducto, codigo, nombre, idCategoria, stockActual',
@@ -15,7 +17,39 @@ db.version(1).stores({
   detalleVentas: 'idDetalleVenta, idVenta, idProducto, [idVenta+idProducto]',
   historialMovimientos: 'idMovimiento, fecha, tipoMovimiento, idProducto, idReferencia',
   configuracion: 'clave, categoria, activo'
-})
+});
+
+// Versión 2 - Sin cambios de esquema, solo para mantener la cadena de migración.
+db.version(2).stores({
+  categorias: 'idCategoria, nombre',
+  productos: 'idProducto, codigo, nombre, idCategoria, stockActual',
+  empresa: 'idEmpresa, nombre',
+  proveedores: 'idProveedor, nombre',
+  clientes: 'idCliente, nombre',
+  pedidos: 'idPedido, idEmpresa, idProveedor, fecha, estado',
+  detallePedidos: 'idDetalle, idPedido, idProducto, [idPedido+idProducto]',
+  ventas: 'idVenta, fecha, idCliente',
+  detalleVentas: 'idDetalleVenta, idVenta, idProducto, [idVenta+idProducto]',
+  historialMovimientos: 'idMovimiento, fecha, tipoMovimiento, idProducto, idReferencia',
+  configuracion: 'clave, categoria, activo'
+});
+
+
+// Versión 3 - VERSIÓN CORREGIDA. Se añaden campos a 'empresa' sin alterar la llave primaria.
+db.version(3).stores({
+  categorias: 'idCategoria, nombre',
+  productos: 'idProducto, codigo, nombre, idCategoria, stockActual',
+  empresa: 'idEmpresa, nombre, rubro, nombreUsuario, infoCompartida', // PK original, campos nuevos añadidos
+  proveedores: 'idProveedor, nombre',
+  clientes: 'idCliente, nombre',
+  pedidos: 'idPedido, idEmpresa, idProveedor, fecha, estado',
+  detallePedidos: 'idDetalle, idPedido, idProducto, [idPedido+idProducto]',
+  ventas: 'idVenta, fecha, idCliente',
+  detalleVentas: 'idDetalleVenta, idVenta, idProducto, [idVenta+idProducto]',
+  historialMovimientos: 'idMovimiento, fecha, tipoMovimiento, idProducto, idReferencia',
+  configuracion: 'clave, categoria, activo'
+});
+
 
 // Constantes del sistema
 export const ESTADOS_PEDIDO = {
